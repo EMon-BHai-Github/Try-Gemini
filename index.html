@@ -1,66 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Emon AI Chat (Fixed)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Emon AI</title>
   <style>
-    body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; padding: 20px; }
-    textarea, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; font-size: 16px; }
-    textarea { background: #161b22; color: white; border: 1px solid #30363d; }
-    button { background: #238636; color: white; font-weight: bold; border: none; cursor: pointer; }
-    button:hover { background: #2ea043; }
-    #output { margin-top: 20px; background: #161b22; padding: 15px; border-radius: 10px; min-height: 80px; }
+    body {
+      background-color: #0e0e0e;
+      color: #ffffff;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #00ffe7;
+    }
+    .chatbox, .output {
+      background: #1c1c1c;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 10px 0;
+    }
+    .input-area {
+      display: flex;
+      margin-top: 10px;
+    }
+    input, select {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      margin-right: 10px;
+    }
+    button {
+      background-color: #00ffe7;
+      border: none;
+      color: black;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background-color: #0ff;
+    }
+    .small {
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .prompt-section {
+      margin-top: 30px;
+    }
   </style>
 </head>
 <body>
+  <h1>🤖 Emon AI</h1>
 
-  <h2>💬 Emon AI Chat (Fixed)</h2>
+  <div class="chatbox">
+    <h3>💬 Talk to Emon AI</h3>
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="Type your message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+    <div id="chatResponse" class="output">Reply will appear here...</div>
+  </div>
 
-  <textarea id="prompt" rows="4" placeholder="Ask something..."></textarea>
-  <button onclick="askGemini()">Ask</button>
+  <div class="prompt-section">
+    <h3>🎯 Prompt Generators</h3>
+    <div class="input-area">
+      <select id="promptType">
+        <option value="photo">Photo Edit Prompt</option>
+        <option value="draw">Image Draw Prompt</option>
+        <option value="script">Script for Reels/YouTube</option>
+        <option value="music">Music Mood Prompt</option>
+      </select>
+      <button onclick="generatePrompt()">Generate</button>
+    </div>
+    <div id="promptOutput" class="output">Prompt will appear here...</div>
+  </div>
 
-  <div id="output">Response will appear here...</div>
+  <div class="small">Made with ❤️ by Emon | Facebook: <a style="color:#0ff" href="https://facebook.com/EMon.BHai.FACEBOOK" target="_blank">EMon.BHai.FACEBOOK</a></div>
 
   <script>
-    const API_KEY = "AIzaSyDfj1K8t3p9ObXnz1wxjVFSvm3nxDSz8W8";
+    const GEMINI_API_KEY = "AIzaSyDfj1K8t3p9ObXnz1wxjVFSvm3nxDSz8W8";
 
-    async function askGemini() {
-      const prompt = document.getElementById("prompt").value.trim();
-      const output = document.getElementById("output");
+    async function sendMessage() {
+      const input = document.getElementById("userInput").value.trim();
+      if (!input) return;
 
-      if (!prompt) return output.innerText = "❗ Please enter a prompt.";
-
-      output.innerText = "⏳ Thinking...";
-
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
-      const body = {
-        contents: [{
-          role: "user",
-          parts: [{ text: prompt }]
-        }]
-      };
-
-      try {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
-
-        const json = await res.json();
-
-        let reply = "❌ No response. Try again.";
-        if (json?.candidates?.[0]?.content?.parts?.length) {
-          reply = json.candidates[0].content.parts.map(p => p.text || "").join("\n");
-        }
-
-        output.innerHTML = reply.replace(/\n/g, "<br>");
-      } catch (err) {
-        output.innerText = "❌ Error: " + err.message;
+      // Smart trigger check
+      const triggers = ["who made you", "your boss", "your creator", "owner", "boss"];
+      if (triggers.some(word => input.toLowerCase().includes(word))) {
+        document.getElementById("chatResponse").innerText = "Emon My Boss 🫡";
+        return;
       }
+
+      document.getElementById("chatResponse").innerText = "Thinking...";
+
+      const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: input }] }]
+        })
+      });
+
+      const data = await res.json();
+      const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response.";
+      document.getElementById("chatResponse").innerText = reply;
+    }
+
+    function generatePrompt() {
+      const type = document.getElementById("promptType").value;
+      let prompt = "";
+
+      switch (type) {
+        case "photo":
+          prompt = "Make my photo look cinematic with moody lighting and soft shadows. Remove background and add neon glow.";
+          break;
+        case "draw":
+          prompt = "Create a high-quality anime-style portrait of a boy wearing a black hoodie in rainy street.";
+          break;
+        case "script":
+          prompt = "Write a short motivational YouTube reel script about never giving up in life.";
+          break;
+        case "music":
+          prompt = "Give me lyrics ideas for a sad romantic Bangla song with emotional vibe.";
+          break;
+        default:
+          prompt = "Choose a valid type.";
+      }
+
+      document.getElementById("promptOutput").innerText = prompt;
     }
   </script>
-
 </body>
 </html>
