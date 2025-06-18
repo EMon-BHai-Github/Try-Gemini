@@ -1,67 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Emon AI v4.1</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>Emon AI - Chat, Draw, Edit</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; padding: 20px; }
-    input, textarea, select, button {
-      width: 100%; padding: 10px; margin: 10px 0;
-      background: #161b22; color: white; border: none; border-radius: 5px;
+    body {
+      background: #0d1117;
+      color: #c9d1d9;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
     }
-    button { background: #238636; cursor: pointer; }
-    button:hover { background: #2ea043; }
-    img, video { max-width: 100%; border-radius: 10px; margin-top: 15px; }
-    #output { background: #161b22; padding: 15px; border-radius: 10px; margin-top: 20px; }
-    small { color: #8b949e; }
+    h2 {
+      color: #58a6ff;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    select, textarea, input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: #161b22;
+      color: white;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    button {
+      background: #238636;
+      border: none;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #2ea043;
+    }
+    #output {
+      margin-top: 20px;
+      background: #161b22;
+      padding: 15px;
+      border-radius: 10px;
+      min-height: 80px;
+    }
+    img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 12px;
+      color: #8b949e;
+    }
   </style>
 </head>
 <body>
-  <h2>👑 Emon AI – Chat | Draw | Edit</h2>
+  <h2>🤖 Emon AI – Chat | Draw | Edit</h2>
 
-  <small>Select Mode</small>
   <select id="mode">
     <option value="text">💬 Chat</option>
-    <option value="draw">🎨 Draw</option>
-    <option value="edit">🖌️ Edit</option>
+    <option value="draw">🎨 Draw (Generate Image)</option>
+    <option value="edit">🖌️ Edit Image</option>
   </select>
 
-  <small>Your Prompt</small>
-  <textarea id="prompt" placeholder="Ask something..."></textarea>
+  <textarea id="prompt" rows="4" placeholder="Enter your prompt..."></textarea>
 
   <input type="file" id="img" accept="image/*" style="display:none" />
+
   <button onclick="run()">Run</button>
 
-  <div id="output">Output will appear here...</div>
+  <div id="output">Result will appear here...</div>
+
+  <div class="footer">Made by Emon 😎</div>
 
   <script>
-    // 🔐 API KEY Hidden in pieces
-    const k1 = "AI", k2 = "zaSyD", k3 = "fj1K8t3", k4 = "p9ObXnz", k5 = "1wxjVFS", k6 = "vm3nxDS", k7 = "z8W8";
-    const API_KEY = k1 + k2 + k3 + k4 + k5 + k6 + k7;
+    const key1 = "AI";
+    const key2 = "zaSyD";
+    const key3 = "fj1K8t3";
+    const key4 = "p9ObXnz";
+    const key5 = "1wxjVFS";
+    const key6 = "vm3nxDS";
+    const key7 = "z8W8";
+    const API_KEY = key1 + key2 + key3 + key4 + key5 + key6 + key7;
 
     async function run() {
       const mode = document.getElementById("mode").value;
-      const promptInput = document.getElementById("prompt");
-      const prompt = promptInput.value.trim();
-      const file = document.getElementById("img").files[0];
-      const out = document.getElementById("output");
+      const prompt = document.getElementById("prompt").value.trim();
+      const imgFile = document.getElementById("img").files[0];
+      const output = document.getElementById("output");
+      output.innerHTML = "⏳ Loading...";
 
-      if (!prompt && mode !== "edit") return out.innerText = "❗ Please enter a prompt.";
-      out.innerHTML = "⏳ Working...";
-
-      // Auto-Response if someone asks "who made you"
-      const askText = prompt.toLowerCase();
-      if (
-        askText.includes("who made you") ||
-        askText.includes("creator") ||
-        askText.includes("your boss") ||
-        askText.includes("কে বানাইছে") ||
-        askText.includes("তোমার মালিক") ||
-        askText.includes("বানাইছে") ||
-        askText.includes("Emon কোথায়")
-      ) {
-        out.innerHTML = "👑 Emon is my Boss. He's the reason I exist. 😎";
+      // Auto reply if asked "who made you?"
+      const lowerPrompt = prompt.toLowerCase();
+      const creatorKeywords = [
+        "who made you",
+        "your creator",
+        "your boss",
+        "তোমাকে কে বানাইছে",
+        "তোমার মালিক",
+        "কে বানাইছে",
+        "banaiyse",
+        "Emon ke"
+      ];
+      if (creatorKeywords.some(k => lowerPrompt.includes(k))) {
+        output.innerHTML = "👑 Emon is my boss. 😎<br>উনি-ই আমাকে তৈরি করেছেন।";
         return;
       }
 
@@ -72,21 +115,19 @@
 
       if (mode === "draw") {
         model = "gemini-1.5-flash-latest";
-        body = {
-          contents: [{ parts: [{ text: prompt }] }]
-        };
+        body = { contents: [{ parts: [{ text: prompt }] }] };
       }
 
       if (mode === "edit") {
-        if (!file) return out.innerText = "❗ Please upload an image.";
-        const base64 = await toBase64(file);
+        if (!imgFile) return output.innerText = "❗ Please upload an image.";
+        const base64 = await toBase64(imgFile);
         model = "gemini-pro-vision";
         body = {
           contents: [{
             parts: [
               {
                 inlineData: {
-                  mimeType: file.type,
+                  mimeType: imgFile.type,
                   data: base64
                 }
               },
@@ -110,23 +151,22 @@
         const textPart = parts.find(p => p.text)?.text;
 
         if (imagePart) {
-          out.innerHTML = `<img src="data:image/png;base64,${imagePart}" />`;
+          output.innerHTML = `<img src="data:image/png;base64,${imagePart}" />`;
         } else if (textPart) {
-          out.innerHTML = `<p>${textPart.replace(/\n/g, "<br>")}</p>`;
+          output.innerHTML = textPart.replace(/\n/g, "<br>");
         } else {
-          out.innerHTML = "❌ No result. Try a better prompt.";
+          output.innerHTML = "❌ No result. Try a more specific prompt.";
         }
-
       } catch (err) {
-        out.innerText = "❌ Error: " + err.message;
+        output.innerText = "❌ Error: " + err.message;
       }
     }
 
     function toBase64(file) {
-      return new Promise((res, rej) => {
+      return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => res(reader.result.split(',')[1]);
-        reader.onerror = err => rej(err);
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = error => reject(error);
         reader.readAsDataURL(file);
       });
     }
@@ -135,9 +175,9 @@
       const mode = document.getElementById("mode").value;
       document.getElementById("img").style.display = (mode === "edit") ? "block" : "none";
       document.getElementById("prompt").placeholder =
-        mode === "text" ? "Ask Emon AI something..." :
-        mode === "draw" ? "Describe a photo you want..." :
-        mode === "edit" ? "What do you want changed in this photo?" : "";
+        mode === "text" ? "Ask something..." :
+        mode === "draw" ? "Describe an image to generate..." :
+        "Upload a photo & say what to edit...";
     });
   </script>
 </body>
