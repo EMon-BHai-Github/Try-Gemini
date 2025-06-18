@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Emon AI v3.1 PRO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { background:#0d1117; color:#c9d1d9; font-family:sans-serif; padding:20px; }
+    input, textarea, button, select {
+      width:100%; padding:10px; margin:10px 0; font-size:16px;
+      background:#161b22; color:white; border:none; border-radius:5px;
+    }
+    button { background:#238636; cursor:pointer; }
+    button:hover { background:#2ea043; }
+    img, video { max-width:100%; border-radius:10px; margin-top:15px; }
+    #output { margin-top:20px; padding:15px; background:#161b22; border-radius:10px; }
+  </style>
+</head>
+<body>
+  <h2>🚀 Emon AI v3.1 PRO – All-in-One</h2>
+
+  <select id="mode">
+    <option value="text">💬 Text Chat</option>
+    <option value="draw">🎨 Draw Image</option>
+    <option value="edit">🖌️ Edit Image (Upload)</option>
+  </select>
+
+  <input type="file" id="img" accept="image/*" style="display:none" />
+  <textarea id="prompt" placeholder="Type your prompt here..."></textarea>
+  <button onclick="run()">Run</button>
+
+  <div id="output">Output will appear here...</div>
+
+  <script>
+    const key = "AIzaSyDfj1K8t3p9ObXnz1wxjVFSvm3nxDSz8W8";
+
+    async function run() {
+      const mode = document.getElementById("mode").value;
+      const prompt = document.getElementById("prompt").value.trim();
+      const file = document.getElementById("img").files[0];
+      const out = document.getElementById("output");
+      out.innerHTML = "⏳ Please wait...";
+
+      if (!prompt && mode !== "edit") return out.innerText = "❗ Please enter a prompt.";
+
+      let model = "gemini-pro";
+      let payload = {
+        contents: [
+          {
+            parts: [{ text: prompt }]
+          }
+        ]
+      };
+
+      if (mode === "draw") model = "gemini-1.5-flash-latest";
+
+      if (mode === "edit") {
+        if (!file) return out.innerText = "❗ Please select an image.";
+        const base64 = await toBase64(file);
+        model = "gemini-pro-vision";
+        payload = {
+          contents: [
+            {
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: file.type,
+                    data: base64
+                  }
+                },
+                { text: prompt }
+              ]
+            }
+          ]
+        };
+      }
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        const parts = data?.candidates?.[0]?.content?.parts || [];
+        const imagePart = parts.find(p => p.inlineData)?.inlineData?.data;
+        const textPart = parts.find(p => p.text)?.text;
+
+        if (imagePart) {
+          out.innerHTML = `<img src="data:image/png;base64,${imagePart}" />`;
+        } else if (textPart) {
+          out.innerHTML = `<p>${textPart.replace(/\n/g, "<br>")}</p>`;
+        } else {
+          out.innerHTML = "❌ Gemini didn't return any image or explanation.<br><br>📝 Try a more specific prompt.";
+        }
+      } catch (e) {
+        out.innerText = "⚠️ Error occurred: " + e.message;
+      }
+    }
+
+    function toBase64(file) {
+      return new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result.split(',')[1]);
+        reader.onerror = err => rej(err);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    document.getElementById("mode").addEventListener("change", () => {
+      const mode = document.getElementById("mode").value;
+      document.getElementById("img").style.display = (mode === "edit") ? "block" : "none";
+      document.getElementById("prompt").placeholder =
+        mode === "text" ? "Ask me anything..." :
+        mode === "draw" ? "Describe the image you want..." :
+        mode === "edit" ? "What should I do with the uploaded image?" :
+        "";
+    });
+  </script>
+</body>
+</html>
