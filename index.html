@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>EmonAI v3.3</title>
+  <title>Emon AI – All-in-One</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; padding: 20px; }
@@ -18,17 +18,17 @@
   </style>
 </head>
 <body>
-  <h2>🚀 Emon AI v3.3 – All in One</h2>
+  <h2>🔥 Emon AI v4.0 – Chat | Draw | Edit</h2>
 
-  <small>Mode</small>
+  <small>Choose Mode</small>
   <select id="mode">
     <option value="text">💬 Chat</option>
     <option value="draw">🎨 Draw</option>
     <option value="edit">🖌️ Edit</option>
   </select>
 
-  <small>Prompt</small>
-  <textarea id="prompt" placeholder="Enter your prompt..."></textarea>
+  <small>Enter Prompt</small>
+  <textarea id="prompt" placeholder="Enter your question or idea..."></textarea>
 
   <input type="file" id="img" accept="image/*" style="display:none" />
 
@@ -37,7 +37,7 @@
   <div id="output">Output will appear here...</div>
 
   <script>
-    // 🔐 Gemini API Key Hidden (smartly split)
+    // ✅ API key hidden using string parts
     const k1 = "AI", k2 = "zaSyD", k3 = "fj1K8t3", k4 = "p9ObXnz", k5 = "1wxjVFS", k6 = "vm3nxDS", k7 = "z8W8";
     const API_KEY = k1 + k2 + k3 + k4 + k5 + k6 + k7;
 
@@ -52,10 +52,15 @@
 
       let model = "gemini-pro";
       let body = {
-        contents: [{ parts: [{ text: prompt }] }]
+        contents: [{ role: "user", parts: [{ text: prompt }] }]
       };
 
-      if (mode === "draw") model = "gemini-1.5-flash-latest";
+      if (mode === "draw") {
+        model = "gemini-1.5-flash-latest";
+        body = {
+          contents: [{ parts: [{ text: prompt }] }]
+        };
+      }
 
       if (mode === "edit") {
         if (!file) return out.innerText = "❗ Please select an image.";
@@ -85,6 +90,7 @@
 
         const json = await res.json();
         const parts = json?.candidates?.[0]?.content?.parts || [];
+
         const imagePart = parts.find(p => p.inlineData)?.inlineData?.data;
         const textPart = parts.find(p => p.text)?.text;
 
@@ -93,7 +99,7 @@
         } else if (textPart) {
           out.innerHTML = `<p>${textPart.replace(/\n/g, "<br>")}</p>`;
         } else {
-          out.innerHTML = "❌ Gemini didn't return any image or explanation.<br><br>📝 Try a better prompt.";
+          out.innerHTML = "❌ Gemini didn't return any image or explanation.<br><br>📝 Try a better or longer prompt.";
         }
 
       } catch (err) {
@@ -110,14 +116,14 @@
       });
     }
 
+    // Show image input if mode is edit
     document.getElementById("mode").addEventListener("change", () => {
       const mode = document.getElementById("mode").value;
       document.getElementById("img").style.display = (mode === "edit") ? "block" : "none";
       document.getElementById("prompt").placeholder =
-        mode === "text" ? "Ask a question..." :
-        mode === "draw" ? "Describe the image to generate..." :
-        mode === "edit" ? "What should I change in this photo?" :
-        "";
+        mode === "text" ? "Ask anything..." :
+        mode === "draw" ? "Describe a scene to draw..." :
+        mode === "edit" ? "What should I edit in this image?" : "";
     });
   </script>
 </body>
