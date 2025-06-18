@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Emon AI - Chat, Draw, Edit</title>
+  <title>Emon AI Chat - Fixed</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
@@ -75,6 +75,7 @@
   <div class="footer">Made by Emon 😎</div>
 
   <script>
+    // 👇 API key চিতিয়ে রাখা
     const key1 = "AI";
     const key2 = "zaSyD";
     const key3 = "fj1K8t3";
@@ -91,30 +92,23 @@
       const output = document.getElementById("output");
       output.innerHTML = "⏳ Loading...";
 
-      // Auto reply if asked "who made you?"
+      // 🔍 Who made you?
       const lowerPrompt = prompt.toLowerCase();
-      const creatorKeywords = [
-        "who made you",
-        "your creator",
-        "your boss",
-        "তোমাকে কে বানাইছে",
-        "তোমার মালিক",
-        "কে বানাইছে",
-        "banaiyse",
-        "Emon ke"
-      ];
+      const creatorKeywords = ["who made you", "your creator", "your boss", "তোমাকে কে বানাইছে", "তোমার মালিক", "কে বানাইছে", "Emon"];
       if (creatorKeywords.some(k => lowerPrompt.includes(k))) {
         output.innerHTML = "👑 Emon is my boss. 😎<br>উনি-ই আমাকে তৈরি করেছেন।";
         return;
       }
 
       let model = "gemini-pro";
+      let url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`;
       let body = {
         contents: [{ role: "user", parts: [{ text: prompt }] }]
       };
 
       if (mode === "draw") {
         model = "gemini-1.5-flash-latest";
+        url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`;
         body = { contents: [{ parts: [{ text: prompt }] }] };
       }
 
@@ -122,6 +116,7 @@
         if (!imgFile) return output.innerText = "❗ Please upload an image.";
         const base64 = await toBase64(imgFile);
         model = "gemini-pro-vision";
+        url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`;
         body = {
           contents: [{
             parts: [
@@ -138,7 +133,7 @@
       }
 
       try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`, {
+        const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body)
