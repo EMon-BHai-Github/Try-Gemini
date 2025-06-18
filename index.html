@@ -66,20 +66,13 @@
   <h1>🤖 Emon AI</h1>
 
   <div class="section">
-    <h3>💬 Talk to Emon AI</h3>
-    <div id="chatOutput" class="output">Your reply will appear here...</div>
-    <textarea id="chatInput" placeholder="Say something to Emon AI..."></textarea>
-    <button onclick="sendChat()">Send</button>
+    <h3>💬 AI Chat & Prompt Generator</h3>
+    <textarea id="chatInput" placeholder="Say something to Emon AI or ask for a prompt..."></textarea>
+    <button onclick="handleBoth()">Ask</button>
+    <div id="output" class="output">Your reply or prompt will appear here...</div>
   </div>
 
-  <div class="section">
-    <h3>🎯 AI Prompt Generator</h3>
-    <div id="promptOutput" class="output">Your prompt will appear here...</div>
-    <textarea id="promptInput" placeholder="What kind of prompt do you want? (e.g., photo edit, anime draw, motivational script)"></textarea>
-    <button onclick="generatePrompt()">Generate Prompt</button>
-  </div>
-
-  <small>Made with ❤️ by <a href="https://facebook.com/EMon.BHai.FACEBOOK" target="_blank">Emon</a> | All Rights Reserved</small>
+  <small>Made with ❤️ by <a href="https://facebook.com/EMon.BHai.FACEBOOK" target="_blank">Emon My Boss 🫡</a> | All Rights Reserved</small>
 
   <script>
     const GEMINI_API_KEY = "AIzaSyDfj1K8t3p9ObXnz1wxjVFSvm3nxDSz8W8";
@@ -109,29 +102,25 @@
       }
     }
 
-    async function sendChat() {
+    async function handleBoth() {
       const input = document.getElementById("chatInput").value.trim();
       if (!input) return;
 
       const smartTriggers = ["who made you", "your boss", "creator", "owner", "created you"];
       if (smartTriggers.some(word => input.toLowerCase().includes(word))) {
-        document.getElementById("chatOutput").innerText = "Emon My Boss 🫡";
+        document.getElementById("output").innerText = "Emon My Boss 🫡";
         return;
       }
 
-      document.getElementById("chatOutput").innerText = "Thinking...";
-      const reply = await callGemini(input);
-      document.getElementById("chatOutput").innerText = reply;
-    }
+      document.getElementById("output").innerText = "Thinking...";
 
-    async function generatePrompt() {
-      const input = document.getElementById("promptInput").value.trim();
-      if (!input) return;
+      let text = input;
+      if (input.toLowerCase().includes("prompt") || input.toLowerCase().includes("edit") || input.toLowerCase().includes("generate")) {
+        text = `Give a creative AI prompt for this: ${input}`;
+      }
 
-      document.getElementById("promptOutput").innerText = "Generating...";
-      const promptRequest = `Give a creative AI prompt for this: ${input}`;
-      const reply = await callGemini(promptRequest);
-      document.getElementById("promptOutput").innerText = reply;
+      const reply = await callGemini(text);
+      document.getElementById("output").innerText = reply;
     }
   </script>
 </body>
