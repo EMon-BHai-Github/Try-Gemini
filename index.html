@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Emon AI – All-in-One</title>
+  <title>Emon AI v4.1</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; padding: 20px; }
@@ -18,37 +18,52 @@
   </style>
 </head>
 <body>
-  <h2>🔥 Emon AI v4.0 – Chat | Draw | Edit</h2>
+  <h2>👑 Emon AI – Chat | Draw | Edit</h2>
 
-  <small>Choose Mode</small>
+  <small>Select Mode</small>
   <select id="mode">
     <option value="text">💬 Chat</option>
     <option value="draw">🎨 Draw</option>
     <option value="edit">🖌️ Edit</option>
   </select>
 
-  <small>Enter Prompt</small>
-  <textarea id="prompt" placeholder="Enter your question or idea..."></textarea>
+  <small>Your Prompt</small>
+  <textarea id="prompt" placeholder="Ask something..."></textarea>
 
   <input type="file" id="img" accept="image/*" style="display:none" />
-
   <button onclick="run()">Run</button>
 
   <div id="output">Output will appear here...</div>
 
   <script>
-    // ✅ API key hidden using string parts
+    // 🔐 API KEY Hidden in pieces
     const k1 = "AI", k2 = "zaSyD", k3 = "fj1K8t3", k4 = "p9ObXnz", k5 = "1wxjVFS", k6 = "vm3nxDS", k7 = "z8W8";
     const API_KEY = k1 + k2 + k3 + k4 + k5 + k6 + k7;
 
     async function run() {
       const mode = document.getElementById("mode").value;
-      const prompt = document.getElementById("prompt").value.trim();
+      const promptInput = document.getElementById("prompt");
+      const prompt = promptInput.value.trim();
       const file = document.getElementById("img").files[0];
       const out = document.getElementById("output");
 
       if (!prompt && mode !== "edit") return out.innerText = "❗ Please enter a prompt.";
-      out.innerHTML = "⏳ Please wait...";
+      out.innerHTML = "⏳ Working...";
+
+      // Auto-Response if someone asks "who made you"
+      const askText = prompt.toLowerCase();
+      if (
+        askText.includes("who made you") ||
+        askText.includes("creator") ||
+        askText.includes("your boss") ||
+        askText.includes("কে বানাইছে") ||
+        askText.includes("তোমার মালিক") ||
+        askText.includes("বানাইছে") ||
+        askText.includes("Emon কোথায়")
+      ) {
+        out.innerHTML = "👑 Emon is my Boss. He's the reason I exist. 😎";
+        return;
+      }
 
       let model = "gemini-pro";
       let body = {
@@ -63,7 +78,7 @@
       }
 
       if (mode === "edit") {
-        if (!file) return out.innerText = "❗ Please select an image.";
+        if (!file) return out.innerText = "❗ Please upload an image.";
         const base64 = await toBase64(file);
         model = "gemini-pro-vision";
         body = {
@@ -99,7 +114,7 @@
         } else if (textPart) {
           out.innerHTML = `<p>${textPart.replace(/\n/g, "<br>")}</p>`;
         } else {
-          out.innerHTML = "❌ Gemini didn't return any image or explanation.<br><br>📝 Try a better or longer prompt.";
+          out.innerHTML = "❌ No result. Try a better prompt.";
         }
 
       } catch (err) {
@@ -116,14 +131,13 @@
       });
     }
 
-    // Show image input if mode is edit
     document.getElementById("mode").addEventListener("change", () => {
       const mode = document.getElementById("mode").value;
       document.getElementById("img").style.display = (mode === "edit") ? "block" : "none";
       document.getElementById("prompt").placeholder =
-        mode === "text" ? "Ask anything..." :
-        mode === "draw" ? "Describe a scene to draw..." :
-        mode === "edit" ? "What should I edit in this image?" : "";
+        mode === "text" ? "Ask Emon AI something..." :
+        mode === "draw" ? "Describe a photo you want..." :
+        mode === "edit" ? "What do you want changed in this photo?" : "";
     });
   </script>
 </body>
