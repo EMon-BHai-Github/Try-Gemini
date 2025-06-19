@@ -161,7 +161,8 @@
     }
 
     async function handleBoth() {
-      const input = document.getElementById("chatInput").value.trim();
+      const inputBox = document.getElementById("chatInput");
+      const input = inputBox.value.trim();
       const output = document.getElementById("output");
       if (!input) return;
 
@@ -173,10 +174,12 @@
 
       if (smartTriggers.some(t => input.toLowerCase().includes(t))) {
         output.innerText = "Emon My Boss 🫡🌸";
+        inputBox.value = ""; // Clear input
         return;
       }
 
       output.innerHTML = "<div class='spinner'>Emon AI is thinking...</div>";
+      inputBox.value = ""; // Clear input
 
       let query = input;
       if (/prompt|edit|generate/i.test(input)) {
