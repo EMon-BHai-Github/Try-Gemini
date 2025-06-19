@@ -106,7 +106,7 @@
       const input = document.getElementById("chatInput").value.trim();
       if (!input) return;
 
-      const smartTriggers = ["who made you", "your boss", "creator", "owner", "created you" "your owner", "Who is Emon?", "Who is Emon", "Emon"];
+      const smartTriggers = ["who made you", "your boss", "creator", "owner", "created you", "your owner", "Who is Emon?", "Who is Emon", "Emon"];
       if (smartTriggers.some(word => input.toLowerCase().includes(word))) {
         document.getElementById("output").innerText = "Emon My Boss 🫡🌸";
         return;
