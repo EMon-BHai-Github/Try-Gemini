@@ -62,6 +62,11 @@
       flex-wrap: wrap;
       gap: 10px;
     }
+    #timerText {
+      text-align: center;
+      margin-top: 10px;
+      color: #999;
+    }
     small {
       display: block;
       text-align: center;
@@ -73,7 +78,7 @@
 <body>
   <h1>🤖 Emon AI</h1>
   <div class="section">
-    <h3>💬 AI Chat & Prompt Generator</h3>
+    <h3>💬 Emon AI Chat & Prompt Generator</h3>
     <textarea id="chatInput" placeholder="Say something to Emon AI or ask for a prompt..."></textarea>
     <div class="buttons">
       <button onclick="handleAsk()">🚀 Ask</button>
@@ -81,6 +86,8 @@
       <button onclick="copyResult()">📋 Copy</button>
     </div>
     <div id="output" class="output">Your reply or prompt will appear here...</div>
+    <p id="timerText"></p>
+    <small>🎤 For voice input, allow microphone access. Works best on Android Chrome.</small>
   </div>
 
   <small>Made with ❤️ by <a href="https://facebook.com/EMon.BHai.FACEBOOK" target="_blank" style="color:#00ffd5">Emon My Boss 🫡</a></small>
@@ -88,12 +95,21 @@
   <script>
     const GEMINI_API_KEY = "AIzaSyDfj1K8t3p9ObXnz1wxjVFSvm3nxDSz8W8";
 
-    async function callGemini(text) {
+    // 🧠 Memory Store
+    let chatHistory = [
+      { role: "user", text: "You are Emon AI, a helpful and friendly assistant." }
+    ];
+
+    async function callGeminiWithMemory(history) {
       try {
+        const formatted = history.map(entry => ({
+          role: entry.role === 'user' ? 'user' : 'model',
+          parts: [{ text: entry.text }]
+        }));
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contents: [{ parts: [{ text }] }] })
+          body: JSON.stringify({ contents: formatted })
         });
         const data = await res.json();
         return data?.candidates?.[0]?.content?.parts?.[0]?.text || "❌ API Error.";
@@ -105,23 +121,45 @@
     async function handleAsk() {
       const input = document.getElementById("chatInput").value.trim();
       const output = document.getElementById("output");
+      const timerText = document.getElementById("timerText");
       if (!input) return;
 
       const smartTriggers = ["who made you", "your boss", "creator", "owner", "created you", "your owner", "Emon"];
       if (smartTriggers.some(q => input.toLowerCase().includes(q.toLowerCase()))) {
-        output.innerText = "Emon My Boss 🫡🌸";
+        const reply = "Emon My Boss 🫡🌸";
+        output.innerText = reply;
+        timerText.innerText = "";
+        speakText(reply, 'en');
         document.getElementById("chatInput").value = "";
         return;
       }
 
       output.innerText = "💭 Thinking...";
-      let text = input;
-      if (/prompt|edit|generate/i.test(input)) {
-        text = `Give a creative AI prompt for this: ${input}`;
-      }
-      const reply = await callGemini(text);
+      timerText.innerText = "⏳ Generating...";
+      const start = Date.now();
+
+      chatHistory.push({ role: "user", text: input });
+      const reply = await callGeminiWithMemory(chatHistory);
+      const duration = ((Date.now() - start) / 1000).toFixed(2);
+
       output.innerText = reply;
+      timerText.innerText = `✅ Done in ${duration} seconds`;
+      chatHistory.push({ role: "bot", text: reply });
+
+      const lang = isBengali(reply) ? 'bn' : 'en';
+      speakText(reply, lang);
       document.getElementById("chatInput").value = "";
+    }
+
+    function speakText(text, lang) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang === 'bn' ? 'bn-BD' : 'en-US';
+      speechSynthesis.speak(utterance);
+    }
+
+    function isBengali(text) {
+      const bengaliRegex = /[\u0980-\u09FF]/;
+      return bengaliRegex.test(text);
     }
 
     function handleVoiceInput() {
@@ -136,7 +174,7 @@
     function copyResult() {
       const text = document.getElementById("output").innerText;
       navigator.clipboard.writeText(text);
-      alert("✅ Copied to clipboard!");
+      alert("✅ Copied to Emon Ai clipboard!");
     }
   </script>
 </body>
